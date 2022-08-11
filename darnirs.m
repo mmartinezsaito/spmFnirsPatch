@@ -303,14 +303,15 @@ for i = 1:numel(U)
         U(i).P = pmod{i};
     end
 end
-SPM.Sess.U = U;
 % resampling
 switch P.K.D.type
-    case 'yes', fs = P.K.D.nfs; nscan = P.K.D.ns;
-    case 'no',  fs = P.fs;      nscan = P.ns;
+    case 'yes', rtfs = P.K.D.nfs; nscan = P.K.D.ns;
+                for i = 1:size(names, 2), U(i).ons = U(i).ons / fs; end
+    case 'no',  rtfs = P.fs;      nscan = P.ns;
 end
-SPM.xY.RT = 1/fs;
+SPM.xY.RT = 1/rtfs;
 SPM.nscan = nscan;
+SPM.Sess.U = U;
 % basis functions
 try   SPM.xBF.T  = spm_get_defaults('stats.fmri.t');
 catch SPM.xBF.T = 16;
