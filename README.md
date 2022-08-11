@@ -3,7 +3,7 @@ Code snippet to augment the SPM-fNIRS toolbox (Tak et al., 2016) with parametric
 The code is provided as is, and sparsely commented. 
 
 ## Instructions
-1. Download the SPM-fNIRS toolbox.
+1. Download the SPM-fNIRS toolbox with its r3 code updates.
 2. Substitute the appropriate m-files with the replacement files.
 3. Run the main file.
 
