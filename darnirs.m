@@ -538,7 +538,7 @@ consur = dir([anadir{sids(1)} 'HbO/con_*gii']);
 
 for i=1:size(str_nirs, 1)
   % model specification
-  ghdir = [gldir str_nirs{i} filesep]; str_nirs{i}
+  ghdir = [gldir filesep str_nirs{i}]; str_nirs{i}
   for j=1:length(consur)   %  1:3
     % Create dirs if non-existent
     condir{1} = ['2dCon' sscanf(conimg(j).name, 'con_%4s.nii')]; % 1sTtest images
