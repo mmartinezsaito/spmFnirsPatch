@@ -47,7 +47,7 @@ switch pjname
         % LONI: Inferior frontal gyrus 80: AF7(S2) F7(S4) F5(D2)
         % LONI: Middle frontal gyrus 80:   AF3(S3) F3(S5) Fp1(D5) F1(D4) FC3(D3) 
         doroi = 1; rois = [2 3 4 5]; roid = [2 3 4 5];
-        subdir2 = 'ROI_LeftMidAndInfFrontGyr_v2_priceXbought/';
+        subdir2 = 'ROI_LeftMidAndInfFrontGyr_sdi0/';
     case 'bidfood'
         sids = 4:40;
         sdi = 0/fs;
@@ -61,8 +61,7 @@ switch pjname
         sdi = 0/fs;
         datcol = 7;
         scanformat = '%f%s%s%s%d%u%u'; nhl = 1;
-        doroi = 0; %
-        
+        doroi = 0; %        
         subdir2 = 'whole_sdi0/';
 end
 
@@ -538,7 +537,7 @@ consur = dir([anadir{sids(1)} 'HbO/con_*gii']);
 
 for i=1:size(str_nirs, 1)
   % model specification
-  ghdir = [gldir filesep str_nirs{i}]; str_nirs{i}
+  ghdir = [gldir str_nirs{i} filesep]; str_nirs{i}
   for j=1:length(consur)   %  1:3
     % Create dirs if non-existent
     condir{1} = ['2dCon' sscanf(conimg(j).name, 'con_%4s.nii')]; % 1sTtest images
