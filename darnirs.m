@@ -17,7 +17,7 @@ devdir = '/home/mario/';
 %bdir1  = [devdir 'MEGA/Neuroscience/Emotion_Interoception_Action_Learning/pj22_fNIRS/'];
 bdir1  = [devdir 'Data/pj22_fNIRS_ROI/'];
 bdir2 =  [devdir 'MEGA/StatisticalLearning_Probability_InformationTheory/'];
-pjname = 'vkuspolza'  % 'kupimuzyku, bidfood, vkuspolza
+pjname = 'kupimuzyku'  % 'kupimuzyku, bidfood, vkuspolza
 
 % configuration variables
 wl = [760 850];  % wavelengths [nm] of the *.wl1 and *.wl2 files
@@ -28,7 +28,7 @@ sdd = 3;  % source-detector distance [cm]
 fs = 3.9062;
 
 % which Hb to read
-whichHb = [1 2 3]; %[1 2 3];
+whichHb = [1 ]; %[1 2 3];
 str{1,1} = 'HbO'; str{2,1} = 'HbR'; str{3,1} = 'HbT';
 str_nirs = str(whichHb)    % chromophores to be analysed: 'HbO', 'HbR', 'HbT'
 
@@ -40,14 +40,14 @@ addpath([bdir2 'Neuroimaging/Anatomy_Templates_Segmentation_ROI'])
 % Data format variables
 switch pjname
     case 'kupimuzyku' 
-        sids = 1:40; 
+        sids = setdiff(1:40, [1 12 29]); % 1:40, find(mean([E{:,4}],1)==0)
         sdi = 0/fs; % stimulus display interval 
         datcol = 5;
         scanformat = '%f%f%s%u%s'; nhl = 0;
         % LONI: Inferior frontal gyrus 80: AF7(S2) F7(S4) F5(D2)
         % LONI: Middle frontal gyrus 80:   AF3(S3) F3(S5) Fp1(D5) F1(D4) FC3(D3) 
-        doroi = 1; rois = [2 3 4 5]; roid = [2 3 4 5];
-        subdir2 = 'ROI_LeftMidAndInfFrontGyr_sdi0/';
+        doroi = 0; rois = [2 3 4 5]; roid = [2 3 4 5];
+        subdir2 = 'whole_sdi0/';
     case 'bidfood'
         sids = 4:40;
         sdi = 0/fs;
@@ -55,14 +55,14 @@ switch pjname
         scanformat = '%*q%*u%f%q%f%*u%q'; nhl = 1;
         % Brodmann: DLPFC 60: AFz(D7) F1(D4) F2(D9) Fz(S9) F3(S5) F4(S12)
         doroi = 1; rois = [5 9 12]; roid = [4 7 9];
-        subdir2 = 'ROI_dlpfc_sdi0_rm/';
+        subdir2 = 'ROI_dlpfc_sdi0_wtp123/';
     case 'vkuspolza'
         sids = 1:39;
         sdi = 0/fs;
         datcol = 7;
         scanformat = '%f%s%s%s%d%u%u'; nhl = 1;
         doroi = 0; %        
-        subdir2 = 'whole_sdi0/';
+        subdir2 = 'whole_sdi0_DecXPvPrimSj/';
 end
 
 % Contrast specification
@@ -90,35 +90,79 @@ for s = sids
   fclose(fid);
   % writing conditions file 
   if strcmp(pjname, 'kupimuzyku')
-    names{1} = 'purchase';    onsets{1} = E{s,1}(E{s,4}==1);  
-    names{2} = 'no_purchase'; onsets{2} = E{s,1}(E{s,4}~=1);  
-    names{3} = 'Apple';       onsets{3} = E{s,1}(strcmp(E{s,3},'Apple')); 
-    names{4} = 'Spotify';     onsets{4} = E{s,1}(strcmp(E{s,3},'Spotify'));  
+	  
+    %names{1} = 'purchase';    onsets{1} = E{s,1}(E{s,4}==1);  
+    %names{2} = 'no_purchase'; onsets{2} = E{s,1}(E{s,4}~=1);  
+    %names{3} = 'Apple';       onsets{3} = E{s,1}(strcmp(E{s,3},'Apple')); 
+    %names{4} = 'Spotify';     onsets{4} = E{s,1}(strcmp(E{s,3},'Spotify'));  
     %mnp = mean(E{s,2}); 
-    %names{5} = 'price_high';  onsets{5} = E{s,1}(E{s,2}>mnp)      
-    %names{6} = 'price_low';   onsets{6} = E{s,1}(E{s,2}<mnp);
-    names{5} = 'stimulus';    onsets{5} = E{s,1};
-    pmod{5} = struct('name', {'price'}, 'P', {zscore(E{s,2})}, 'h', {1});
+    %names{5} = 'price_high'; onsets{5} = E{s,1}(E{s,2}>mnp)      
+    %names{6} = 'price_low';  onsets{6} = E{s,1}(E{s,2}<mnp);
+    %names{5} = 'stimulus';    onsets{5} = E{s,1};
+    %pmod{5} = struct('name', {'price'}, 'P', {zscore(E{s,2})}, 'h', {1});
+
+    names{1} = 'stimulus_buy';   onsets{1} = E{s,1}(E{s,4}==1);
+    pmod{1} = struct('name', {'price_buy'}, 'P', {zscore(E{s,2}(E{s,4}==1))}, 'h', {1});
+    names{2} = 'stimulus_nobuy'; onsets{2} = E{s,1}(E{s,4}~=1);
+    pmod{2} = struct('name', {'price_nobuy'}, 'P', {zscore(E{s,2}(E{s,4}~=1))}, 'h', {1});
+    names{3} = 'Apple';          onsets{3} = E{s,1}(strcmp(E{s,3},'Apple')); 
+    names{4} = 'Spotify';        onsets{4} = E{s,1}(strcmp(E{s,3},'Spotify'));  
+
   elseif strcmp(pjname, 'bidfood')
     free_rows = strcmp(E{s,4},'free'); forc_rows = strcmp(E{s,4},'forced');
-    names{1} = 'free'; onsets{1} = E{s,1}(free_rows); 
-    pmod{1} = struct('name', {'free_wtp'}, 'P', {zscore(E{s,3}(free_rows))}, 'h', {1});
-    names{2} = 'forc'; onsets{2} = E{s,1}(forc_rows); 
-    pmod{2} = struct('name', {'forc_wtp'}, 'P', {zscore(E{s,3}(forc_rows))}, 'h', {1});
-    nr0 = length(names);
-    items = unique(str2double(E{s,2})); nitems=length(items);
-    for i=items'
-      names{nr0+i} = sprintf('item%02u_free',i); onsets{nr0+i} = E{s,1}(str2double(E{s,2})==i & strcmp(E{s,4},'free'));
-      names{nr0+nitems+i} = sprintf('item%02u_forc',i); onsets{nr0+nitems+i} = E{s,1}(str2double(E{s,2})==i & strcmp(E{s,4},'forced')); %pmod{nr0+nitems+i} = struct('name', {[forcin '_wtp']}, 'P', {(E{s,3}(forcrw)-mu)/sg}, 'h', {1});
-    end
+    %names{1} = 'free'; onsets{1} = E{s,1}(free_rows); 
+    %pmod{1} = struct('name', {'free_wtp'}, 'P', {zscore(E{s,3}(free_rows))}, 'h', {1});
+    %names{2} = 'forc'; onsets{2} = E{s,1}(forc_rows); 
+    %pmod{2} = struct('name', {'forc_wtp'}, 'P', {zscore(E{s,3}(forc_rows))}, 'h', {1});
+    %nr0 = length(names);
+    %items = unique(str2double(E{s,2})); nitems=length(items);
+    %for i=items'
+    %  names{nr0+i} = sprintf('item%02u_free',i); onsets{nr0+i} = E{s,1}(str2double(E{s,2})==i & strcmp(E{s,4},'free'));
+    %  names{nr0+nitems+i} = sprintf('item%02u_forc',i); onsets{nr0+nitems+i} = E{s,1}(str2double(E{s,2})==i & strcmp(E{s,4},'forced')); %pmod{nr0+nitems+i} = struct('name', {[forcin '_wtp']}, 'P', {(E{s,3}(forcrw)-mu)/sg}, 'h', {1});
+    %end
+    names{1} = 'free_low';  onsets{1} = E{s,1}(free_rows & E{s,3} < 25); 
+    names{2} = 'forc_low';  onsets{2} = E{s,1}(forc_rows & E{s,3} < 25); 
+    names{3} = 'free_mid';  onsets{3} = E{s,1}(free_rows & E{s,3} > 25 & E{s,3} < 50); 
+    names{4} = 'forc_mid';  onsets{4} = E{s,1}(forc_rows & E{s,3} > 25 & E{s,3} < 50); 
+    names{5} = 'free_high'; onsets{5} = E{s,1}(free_rows & E{s,3} > 50);
+    names{6} = 'forc_high'; onsets{6} = E{s,1}(forc_rows & E{s,3} > 50);  
+    
   elseif strcmp(pjname, 'vkuspolza')
     % frame, product, polezvred, priming, decision, vkus, polza
+    %{
     names{1} = 'stimulus';    onsets{1} = E{s,1};
-    pmod{1} = struct('name', {'decision'}, 'P', {zscore(double(E{s,5}))}, 'h', {1});
-    names{2} = 'polez';   onsets{2} = E{s,1}(strcmp(E{s,3},'polezny'));  
-    names{3} = 'vred';    onsets{3} = E{s,1}(strcmp(E{s,3},'vred'));    
+    %pmod{1}(1) = struct('name', {'decision'}, 'P', {zscore(double(E{s,5}))}, 'h', {1});
+    pmod{1}(1) = struct('name', {'sjvkus'}, 'P', {zscore(double(E{s,6}))}, 'h', {1});
+    pmod{1}(2) = struct('name', {'sjpolz'}, 'P', {zscore(double(E{s,7}))}, 'h', {1});
+    
+    names{2} = 'polez';   onsets{2} = E{s,1}(strcmp(E{s,3},'polezny'));
+    names{3} = 'vred';    onsets{3} = E{s,1}(strcmp(E{s,3},'vred')); 
+    
+    names{4} = 'primvkus'; onsets{4} = E{s,1}(strcmp(E{s,4},'Отдохните и затем подумайте о ВКУСЕ следующего товара')); 
+    names{5} = 'primpolz'; onsets{5} = E{s,1}(strcmp(E{s,4},'Отдохните и затем подумайте о ПОЛЬЗЕ следующего товара')); 
+    names{6} = 'primtov';  onsets{6} = E{s,1}(strcmp(E{s,4},'Отдохните и затем просто подумайте о следующем товаре')); 
+    %}
+    
+    names{1} = 'stimulus_eat'; onsets{1} = E{s,1}(E{s,5} > 0);
+    pmod{1}(1) = struct('name', {'sjvkus_eat'}, 'P', {zscore(double(E{s,6}(E{s,5}>0)))}, 'h', {1});
+    pmod{1}(2) = struct('name', {'sjpolz_eat'}, 'P', {zscore(double(E{s,7}(E{s,5}>0)))}, 'h', {1});
+    names{2} = 'polez_eat';    onsets{2} = E{s,1}(strcmp(E{s,3},'polezny') & E{s,5}>0);
+    names{3} = 'vred_eat';     onsets{3} = E{s,1}(strcmp(E{s,3},'vred') & E{s,5}>0); 
+    names{4} = 'primvkus_eat'; onsets{4} = E{s,1}(strcmp(E{s,4},'Отдохните и затем подумайте о ВКУСЕ следующего товара') & E{s,5}>0); 
+    names{5} = 'primpolz_eat'; onsets{5} = E{s,1}(strcmp(E{s,4},'Отдохните и затем подумайте о ПОЛЬЗЕ следующего товара') & E{s,5}>0); 
+    names{6} = 'primtov_eat';  onsets{6} = E{s,1}(strcmp(E{s,4},'Отдохните и затем просто подумайте о следующем товаре') & E{s,5}>0); 
+   
+    names{7} = 'stimulus_not'; onsets{7} = E{s,1}(E{s,5} < 0);
+    pmod{7}(1) = struct('name', {'sjvkus_not'}, 'P', {zscore(double(E{s,6}(E{s,5}<0)))}, 'h', {1});
+    pmod{7}(2) = struct('name', {'sjpolz_not'}, 'P', {zscore(double(E{s,7}(E{s,5}<0)))}, 'h', {1});
+    names{8} = 'polez_not';    onsets{8} = E{s,1}(strcmp(E{s,3},'polezny') & E{s,5}<0);
+    names{9} = 'vred_not';     onsets{9} = E{s,1}(strcmp(E{s,3},'vred') & E{s,5}<0); 
+    names{10} = 'primvkus_not'; onsets{10} = E{s,1}(strcmp(E{s,4},'Отдохните и затем подумайте о ВКУСЕ следующего товара') & E{s,5}<0); 
+    names{11} = 'primpolz_not'; onsets{11} = E{s,1}(strcmp(E{s,4},'Отдохните и затем подумайте о ПОЛЬЗЕ следующего товара') & E{s,5}<0); 
+    names{12} = 'primtov_not';  onsets{12} = E{s,1}(strcmp(E{s,4},'Отдохните и затем просто подумайте о следующем товаре') & E{s,5}<0); 
+       
   end
-  durations = num2cell(ones(1,length(names))*sdi); 
+  durations = num2cell(ones(1,length(names))*sdi);
   if length(pmod) < length(names), pmod{length(names)} = []; end
   save([anadir{s} 'multiple_conditions.mat'], 'names', 'onsets', 'durations', 'pmod')
 end
@@ -231,7 +275,7 @@ F{1,1} = char(F{1,1});   % it only accepts char array, not cell array
 F{2,1} = fullfile(anadir{s}, 'NIRS.mat');
 spm_fnirs_spatialpreproc_ui(F) % R= precludes saving 
 % GUI: press 'Spatial' and follow instructions
-% output: R - structure array of optode/channel positions 
+% output: R - structure array of optode/channel positions
 
 %
 %% ROI
@@ -306,7 +350,7 @@ end
 switch P.K.D.type
     case 'yes', rtfs = P.K.D.nfs; nscan = P.K.D.ns;
                 for i = 1:size(names, 2), U(i).ons = U(i).ons / fs; end
-    case 'no',  rtfs = P.fs;      nscan = P.ns;
+    case 'no',  rtfs = P.fs;      nscan = P.ns;     
 end
 SPM.xY.RT = 1/rtfs;
 SPM.nscan = nscan;
@@ -424,43 +468,99 @@ for i = 1:size(str_nirs, 1)
 % contrasts are set in spm_conman at 1264
   namec = {}; STATc = {}; cc = {};
   if strcmp(pjname, 'kupimuzyku')    % [1 1 0 0 -1 0 0] and [0 0 1 1 -1 0 0] are linearly dependent directions
-    namec{1} = 'buy-nobuy';     STATc{1} = 'T'; cc{1} = [1 -1 0 0 0 0 0]'; 
-    namec{2} = 'Apple-Spotify'; STATc{2} = 'T'; cc{2} = [0 0 1 -1 0 0 0]'; 
-    namec{3} = 'stimulus';      STATc{3} = 'T'; cc{3} = [0 0 0 0 1 0 0]'; 
-    namec{4} = 'price';         STATc{4} = 'T'; cc{4} = [0 0 0 0 0 1 0]'; 
-    namec{5} = 'priceXbought';  STATc{5} = 'T'; cc{5} = [1 -1 0 0 0 1 0]';
+    namec{1} = 'buy-nobuy';       STATc{1} = 'T'; cc{1} = [1 0 -1 0 0 0 0]'; 
+    namec{2} = 'Apple-Spotify';   STATc{2} = 'T'; cc{2} = [0 0 0 0 1 -1 0]'; 
+    namec{3} = 'stimulus';        STATc{3} = 'T'; cc{3} = [1 0 1 0 0 0 0]'; 
+    namec{4} = 'price';           STATc{4} = 'T'; cc{4} = [0 1 0 1 0 0 0]'; 
+    
+    namec{5} = 'price*buy-nobuy'; STATc{5} = 'T'; cc{5} = [0 1 0 -1 0 1 0]';
+    
+    
   elseif strcmp(pjname, 'bidfood')
     %namec{1} = 'free-forc';  STATc{1} = 'T'; cc{1} = [1 -1 0 0 0]';
     %namec{2} = 'stim-dec';   STATc{2} = 'T'; cc{2} = [0 0 1 0 0]'; 
     %namec{3} = 'free_wtp';   STATc{3} = 'T'; cc{2} = [1 0 0 1 0]'; 
     %namec{4} = 'forced_wtp'; STATc{4} = 'T'; cc{3} = [0 1 0 1 0]'; 
-    namec{1} = 'wtp';          STATc{1} = 'T'; cc{1} = [0 1  0 1 zeros(1,2*nitems+1)]'; 
-    namec{2} = 'free_wtp';     STATc{2} = 'T'; cc{2} = [0 1  0 0 zeros(1,2*nitems+1)]'; 
-    namec{3} = 'forc_wtp';     STATc{3} = 'T'; cc{3} = [0 0  0 1 zeros(1,2*nitems+1)]'; 
-    namec{4} = 'free-forc';    STATc{4} = 'T'; cc{4} = [1 0 -1 0 zeros(1,2*nitems+1)]';
-    namec{5} = 'free-forc_wtp';STATc{5} = 'T'; cc{5} = [0 1 0 -1 zeros(1,2*nitems+1)]';
-    nc0 = length(namec); cc0 = zeros(5+2*nitems,1);
+    
+    %namec{1} = 'wtp';          STATc{1} = 'T'; cc{1} = [0 1  0 1 zeros(1,2*nitems+1)]'; 
+    %namec{2} = 'free_wtp';     STATc{2} = 'T'; cc{2} = [0 1  0 0 zeros(1,2*nitems+1)]'; 
+    %namec{3} = 'forc_wtp';     STATc{3} = 'T'; cc{3} = [0 0  0 1 zeros(1,2*nitems+1)]'; 
+    %namec{4} = 'free-forc';    STATc{4} = 'T'; cc{4} = [1 0 -1 0 zeros(1,2*nitems+1)]';
+    %namec{5} = 'free-forc_wtp';STATc{5} = 'T'; cc{5} = [0 1 0 -1 zeros(1,2*nitems+1)]';
+   
+    %nc0 = length(namec); cc0 = zeros(5+2*nitems,1);
     %cc0 = zeros(2*2*nitems+1, 1);
     %namec{1} = 'wtp';          STATc{1} = 'T'; cc{1} = cc0; cc{1}(2:2:4*nitems) = 1; 
     %namec{2} = 'free_wtp';     STATc{2} = 'T'; cc{2} = cc0; cc{2}(2:2:2*nitems) = 1; 
     %namec{3} = 'forc_wtp';     STATc{3} = 'T'; cc{3} = cc0; cc{3}(2*nitems+2:2:4*nitems) = 1; 
     %namec{4} = 'free-forc';    STATc{4} = 'T'; cc{4} = cc0; cc{4}(1:2:2*nitems) = 1; cc{4}(2*nitems+1:2:4*nitems) = -1; 
     %namec{5} = 'free-forc_wtp';STATc{5} = 'T'; cc{5} = cc0; cc{5} = cc{2} - cc{3};
-    for j=items'
-      %namec{nc0+j} = sprintf('free_item%02u',j); STATc{nc0+j}='T'; cc{nc0+j}=cc0; cc{nc0+j}(4+j) = 1;     
-      %namec{nc0+nitems+j} = sprintf('forc_item%02u',j); STATc{nc0+nitems+j}='T'; cc{nc0+nitems+j}=cc0; cc{nc0+nitems+j}(4+nitems+j) = 1; 
-      namec{nc0+j} = sprintf('free-forc_item%02u',j); STATc{nc0+j}='T'; cc{nc0+j}=cc0; cc{nc0+j}([4+j,4+nitems+j]) = [1 -1];     
+    %for j=items'
+       %namec{nc0+j} = sprintf('free_item%02u',j); STATc{nc0+j}='T'; cc{nc0+j}=cc0; cc{nc0+j}(4+j) = 1;     
+       %namec{nc0+nitems+j} = sprintf('forc_item%02u',j); STATc{nc0+nitems+j}='T'; cc{nc0+nitems+j}=cc0; cc{nc0+nitems+j}(4+nitems+j) = 1; 
+      %namec{nc0+j} = sprintf('free-forc_item%02u',j); STATc{nc0+j}='T'; cc{nc0+j}=cc0; cc{nc0+j}([4+j,4+nitems+j]) = [1 -1];     
       
-      %namec{nc0+j} = sprintf('free-forc_item%02u',j); STATc{nc0+j}='T';
-      %cc{nc0+j}=cc0; cc{nc0+j}([2*j-1,2*nitems+2*j-1]) = [1 -1];     
-      %namec{nc0+nitems+j} = sprintf('free-forc_item%02u_wtp',j); STATc{nc0+nitems+j}='T';
-      %cc{nc0+nitems+j}=cc0; cc{nc0+nitems+j}([2*j,2*nitems+2*j]) = [1 -1];     
-    end
+       %namec{nc0+j} = sprintf('free-forc_item%02u',j); STATc{nc0+j}='T';
+       %cc{nc0+j}=cc0; cc{nc0+j}([2*j-1,2*nitems+2*j-1]) = [1 -1];     
+       %namec{nc0+nitems+j} = sprintf('free-forc_item%02u_wtp',j); STATc{nc0+nitems+j}='T';
+       %cc{nc0+nitems+j}=cc0; cc{nc0+nitems+j}([2*j,2*nitems+2*j]) = [1 -1];     
+    %end
+    
+    %namec{1} = 'free';      STATc{1} = 'T'; cc{1} = [1 0 1 0 1 0 0]'; 
+    %namec{2} = 'forc';      STATc{2} = 'T'; cc{2} = [0 1 0 1 0 1 0]'; 
+    %namec{3} = 'low';       STATc{3} = 'T'; cc{3} = [1 1 0 0 0 0 0]'; 
+    %namec{4} = 'mid';       STATc{4} = 'T'; cc{4} = [0 0 1 1 0 0 0]'; 
+    %namec{5} = 'high';      STATc{5} = 'T'; cc{5} = [0 0 0 0 1 1 0]'; 
+    namec{1} = 'free-forc';     STATc{1} = 'T'; cc{1} = [1 -1 1 -1 1 -1 0]'; 
+    namec{2} = 'free_high-low'; STATc{2} = 'T'; cc{2} = [-1 0 0 0 1 0 0]';
+    namec{3} = 'free_high-mid'; STATc{3} = 'T'; cc{3} = [0 0 -1 0 1 0 0]';
+    namec{4} = 'free_mid-low';  STATc{4} = 'T'; cc{4} = [-1 0 1 0 0 0 0]'; 
+    namec{5} = 'forc_high-low'; STATc{5} = 'T'; cc{5} = [0 -1 0 0 0 1 0]';
+    namec{6} = 'forc_high-mid'; STATc{6} = 'T'; cc{6} = [0 0 0 -1 0 1 0]';
+    namec{7} = 'forc_mid-low';  STATc{7} = 'T'; cc{7} = [0 -1 0 1 0 0 0]'; 
+    namec{8} = 'high_free-forc'; STATc{8} = 'T';  cc{8} = [0 0 0 0 1 -1 0]'; 
+    namec{9} = 'mid_free-forc';  STATc{9} = 'T';  cc{9} = [0 0 1 -1 0 0 0]'; 
+    namec{10} = 'low_free-forc'; STATc{10} = 'T'; cc{10} = [1 -1 0 0 0 0 0]'; 
+    namec{11} = 'free-forc*high-low'; STATc{11} = 'T'; cc{11} = [-1 1 0 0 1 -1 0]'; 
+           
   elseif strcmp(pjname, 'vkuspolza')
-    namec{1} = 'decision';   STATc{1} = 'T'; cc{1} = [0 1 0 0 0]'; 
-    namec{2} = 'polez-vred'; STATc{2} = 'T'; cc{2} = [0 0 1 -1 0]'; 
-    namec{3} = 'posdec*polez-vred'; STATc{3} = 'T'; cc{3} = [0 1 1 -1 0]';      
-    namec{4} = 'negdec*polez-vred'; STATc{4} = 'T'; cc{4} = [0 -1 1 -1 0]';      
+    %namec{1} = 'decision';   STATc{1} = 'T'; cc{1} = [0 1 0 0 0]'; 
+    
+    %namec{2} = 'polez-vred'; STATc{2} = 'T'; cc{2} = [0 0 1 -1 0]'; 
+    %namec{3} = 'posdec*polez-vred'; STATc{3} = 'T'; cc{3} = [0 1 1/2 -1/2 0]';      
+    %namec{4} = 'negdec*polez-vred'; STATc{4} = 'T'; cc{4} = [0 -1 1/2 -1/2 0]';
+    
+    %namec{2} = 'primVkus';        STATc{2} = 'T'; cc{2} = [0 0 1 0 -1 0]'; 
+    %namec{3} = 'primPolz';        STATc{3} = 'T'; cc{3} = [0 0 0 1 -1 0]';    
+    %namec{4} = 'dec*primVkus';    STATc{4} = 'T'; cc{4} = [0 1 1/2 0 -1/2 0]';      
+    %namec{5} = 'negdec*primVkus'; STATc{5} = 'T'; cc{5} = [0 -1 1/2 0 -1/2 0]';      
+    %namec{6} = 'dec*primPolz';    STATc{6} = 'T'; cc{6} = [0 1 0 1/2 -1/2 0]';      
+    %namec{7} = 'negdec*primPolz'; STATc{7} = 'T'; cc{7} = [0 -1 0 1/2 -1/2 0]';  
+
+    %namec{2} = 'sjvkus'; STATc{2} = 'T'; cc{2} = [0 0 1 0 0]'; 
+    %namec{3} = 'sjpolz'; STATc{3} = 'T'; cc{3} = [0 0 0 1 0]'; 
+    %namec{4} = 'dec*sjvkus'; STATc{4} = 'T'; cc{4} = [0 1/2 1/2 0 0]'; 
+    %namec{5} = 'dec*sjpolz'; STATc{5} = 'T'; cc{5} = [0 1/2 0 1/2 0]'; 
+    
+    %namec{1} = 'decision';   STATc{1} = 'T'; cc{1} = [0 1 0 0 0 0 0 0 0 0]'; 
+    %namec{2} = 'polez-vred'; STATc{2} = 'T'; cc{2} = [0 0 0 0 1 -1 0 0 0 0]'; 
+    %namec{3} = 'primVkus';   STATc{3} = 'T'; cc{3} = [0 0 0 0 0 0 1 0 -1 0]'; 
+    %namec{4} = 'primPolz';   STATc{4} = 'T'; cc{4} = [0 0 0 0 0 0 0 1 -1 0]'; 
+    %namec{5} = 'sjvkus';     STATc{5} = 'T'; cc{5} = [0 0 1 0 0 0 0 0 0 0]'; 
+    %namec{6} = 'sjpolz';     STATc{6} = 'T'; cc{6} = [0 0 0 1 0 0 0 0 0 0]';  
+    
+    namec{1} = 'eat-not';    STATc{1} = 'T'; cc{1} = [1 0 0 0 0 0 0 0   -1 0 0 0 0 0 0 0 0]'; 
+    namec{2} = 'polez-vred'; STATc{2} = 'T'; cc{2} = [0 0 0 1 -1 0 0 0  0 0 0 1 -1 0 0 0 0]'; 
+    namec{3} = 'primVkus';   STATc{3} = 'T'; cc{3} = [0 0 0 0 0 1 0 -1  0 0 0 0 0 1 0 -1 0]'; 
+    namec{4} = 'primPolz';   STATc{4} = 'T'; cc{4} = [0 0 0 0 0 0 1 -1  0 0 0 0 0 0 1 -1 0]';  
+    namec{5} = 'sjvkus';     STATc{5} = 'T'; cc{5} = [0 1 0 0 0 0 0 0   0 1 0 0 0 0 0 0  0]'; 
+    namec{6} = 'sjpolz';     STATc{6} = 'T'; cc{6} = [0 0 1 0 0 0 0 0   0 0 1 0 0 0 0 0  0]'; 
+    namec{7} = 'eat-not*plz-vrd';  STATc{7} = 'T';  cc{7} =  [0 0 0 1 -1 0 0 0  0 0 0 -1 1 0 0 0 0]'; 
+    namec{8} = 'eat-not*primVkus'; STATc{8} = 'T';  cc{8} =  [0 0 0 0 0 1 0 -1  0 0 0 0 0 -1 0 1 0]'; 
+    namec{9} = 'eat-not*primPolz'; STATc{9} = 'T';  cc{9} = [0 0 0 0 0 0 1 -1  0 0 0 0 0 0 -1 1 0]';  
+    namec{10} = 'eat-not*sjvkus';  STATc{10} = 'T'; cc{10} = [0 1 0 0 0 0 0 0   0 -1 0 0 0 0 0 0 0]'; 
+    namec{11} = 'eat-not*sjpolz';  STATc{11} = 'T'; cc{11} = [0 0 1 0 0 0 0 0   0 0 -1 0 0 0 0 0 0]'; 
+    
   end
   
   nc1 = length(namec);
@@ -566,4 +666,3 @@ for i=1:size(str_nirs, 1)
     end       
   end
 end
-
